@@ -23,6 +23,7 @@ This webhook template sets up everything you need to build your fulfillment for 
   + Copy the link under the events column. For ex:  `https://us-central1-<PROJECTID>.cloudfunctions.net/<FUNCTIONNAME>`.
 9. Back in DialogFlow Console > **Fulfullment** > **Enable** Webhook.
 10. Paste the URL from the Firebase Console’s events column into the **URL** field > **Save**
+11. Go to **Integrations** > **Integration Settings** > **Test** > Select `Talk to my test app`
 
 
 ## License
