@@ -22,7 +22,7 @@ Select **only one** of the options below.
 8. Run `firebase deploy --only functions:dialogflowFirebaseFulfillment`
 9. When successfully deployed, visit the **Project Console** link > **Functions** > **Dashboard**
   + Copy the link under the events column. For example: `https://us-central1-<PROJECTID>.cloudfunctions.net/<FUNCTIONNAME>`
-10. Back in Dialogflow Console > **Fulfullment** > **Enable** Webhook.
+10. Back in Dialogflow Console > **Fulfillment** > **Enable** Webhook.
 11. Paste the URL from the Firebase Console’s events column into the **URL** field > **Save**.
 
 <sup>A.</sup> Powered by Cloud Functions for Firebase
