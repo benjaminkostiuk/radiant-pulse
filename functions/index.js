@@ -59,7 +59,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   // // below to get this function to be run when a Dialogflow intent is matched
   // function googleAssistantHandler(agent) {
   //   let conv = agent.conv(); // Get Actions on Google library conv instance
-  //   conv.ask('Hello from the Actions on Google client library!') // Use Actions on Google library
+  //   conv.ask('Hello from the Actions on Google client library!'); // Use Actions on Google library
   //   agent.add(conv); // Add Actions on Google library responses to your agent's response
   // }
 
