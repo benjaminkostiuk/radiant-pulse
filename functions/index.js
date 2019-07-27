@@ -27,15 +27,6 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
 
-  function welcome (agent) {
-    agent.add(`Welcome to my agent!`);
-  }
-
-  function fallback (agent) {
-    agent.add(`I didn't understand`);
-    agent.add(`I'm sorry, can you try again?`);
-  }
-
   // // Uncomment and edit to make your own intent handler
   // // uncomment `intentMap.set('your intent name here', yourFunctionHandler);`
   // // below to get this function to be run when a Dialogflow intent is matched
@@ -63,10 +54,20 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   //   agent.add(conv); // Add Actions on Google library responses to your agent's response
   // }
 
+  function testFunction(agent) {
+    let conv = agent.conv();
+    conv.ask('Hello!');
+    agent.add(conv);
+  }
+
   // Run the proper function handler based on the matched Dialogflow intent name
   let intentMap = new Map();
-  intentMap.set('Default Welcome Intent', welcome);
-  intentMap.set('Default Fallback Intent', fallback);
+  if(agent.requestSource == agent.ACTIONS_ON_GOOGLE) {
+    intentMap.set('analytics.video.views', testFunction);
+  } else {
+    intentMap.set('analytics.video.views', testFunction);
+  }
+  
   // intentMap.set('<INTENT_NAME_HERE>', yourFunctionHandler);
   // intentMap.set('<INTENT_NAME_HERE>', googleAssistantHandler);
   agent.handleRequest(intentMap);
