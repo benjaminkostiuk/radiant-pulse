@@ -1,6 +1,9 @@
-# Dialogflow Fulfillment Webhook Template for Node.js and Cloud Functions for Firebase
+# Pulse Analytics Google Assistant Agent
 
-This webhook template sets up everything needed to build fulfillment for your Dialogflow agent.
+This repository contains the complete code for creating and developing the Pulse Analytics Google Assistant Agent. Included is the zipped JSON for easy agent import, the full cloud function code to be hosted by Firebase and tools for local development.
+
+## Setup Instructions
+Before beginning you __must__ have a google account. You can create one [here](https://accounts.google.com/signup/v2/webcreateaccount?flowName=GlifWebSignIn&flowEntry=SignUp).
 
 ## Setup Instructions
 Select **only one** of the options below.
