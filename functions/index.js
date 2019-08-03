@@ -17,15 +17,22 @@
 'use strict';
 
 const functions = require('firebase-functions');
+const {google} = require('googleapis');
+const {SignIn} = require('actions-on-google');
 const {WebhookClient} = require('dialogflow-fulfillment');
 const {Card, Suggestion} = require('dialogflow-fulfillment');
+
+const gAuth = new google.auth.OAuth2();   // Set up Google OAuth2 for authenticating as End Users
+const youtubeAnalytics = google.youtubeAnalytics('v2');   // Get Google's Youtube Analytics Api
 
 process.env.DEBUG = 'dialogflow:debug'; // enables lib debugging statements
 
 exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, response) => {
+  // Create Webhook Client
   const agent = new WebhookClient({ request, response });
-  console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
-  console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
+  // Uncomment for debugging purposes
+  // console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
+  // console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
 
   // // Uncomment and edit to make your own intent handler
   // // uncomment `intentMap.set('your intent name here', yourFunctionHandler);`
@@ -45,25 +52,63 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   //   agent.setContext({ name: 'weather', lifespan: 2, parameters: { city: 'Rome' }});
   // }
 
-  // // Uncomment and edit to make your own Google Assistant intent handler
-  // // uncomment `intentMap.set('your intent name here', googleAssistantHandler);`
-  // // below to get this function to be run when a Dialogflow intent is matched
-  // function googleAssistantHandler(agent) {
-  //   let conv = agent.conv(); // Get Actions on Google library conv instance
-  //   conv.ask('Hello from the Actions on Google client library!'); // Use Actions on Google library
-  //   agent.add(conv); // Add Actions on Google library responses to your agent's response
-  // }
-
   function testFunction(agent) {
     let conv = agent.conv();
-    conv.ask('Hello!');
+    let token = conv.user.access.token;
+    if(token) {
+      console.log(token);
+      gAuth.setCredentials({
+        access_token: token
+      });
+      youtubeAnalytics.reports.query({
+        auth: gAuth,
+        dimensions: 'day',
+        endDate: '2019-01-02',
+        startDate: '2019-01-01',
+        metrics: 'likes,dislikes,views',
+        ids: 'channel==mine'
+      }, (err, response) => {
+        if(err) {
+          console.log(err);
+        } else {
+          console.log(response);
+        }
+      }); 
+      conv.ask('Has token');
+      // runReport(token).then(output => {
+      //   conv.ask('Sucess');
+      //   agent.add(conv);
+      // }).catch(error => {
+      //   conv.ask('Failed to pull resource');
+      //   agent.add(conv);
+      // });
+    } else {
+      conv.ask('No token');
+    }
     agent.add(conv);
+  }
+
+  function signIn(agent) {
+    let conv = agent.conv();
+    conv.ask(new SignIn('To get access token'));
+    agent.add(conv);
+  }
+
+
+  function confirmationSignIn(agent) {
+   console.log(agent);
+   let conv = agent.conv();
+   console.log(conv);
+   conv.ask('Great! Confirmed!');
+   agent.add(conv); 
   }
 
   // Run the proper function handler based on the matched Dialogflow intent name
   let intentMap = new Map();
   if(agent.requestSource == agent.ACTIONS_ON_GOOGLE) {
     intentMap.set('analytics.video.views', testFunction);
+    intentMap.set('sign.in', signIn);
+    intentMap.set('sign.in.confirmation', confirmationSignIn);
   } else {
     intentMap.set('analytics.video.views', testFunction);
   }
@@ -72,3 +117,18 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   // intentMap.set('<INTENT_NAME_HERE>', googleAssistantHandler);
   agent.handleRequest(intentMap);
 });
+
+function runReport(token) {
+  if(token) {
+    console.log(token)
+
+    return new Promise((resolve, reject) => {
+      
+    });
+
+
+  }
+
+
+  
+}
