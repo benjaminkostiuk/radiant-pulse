@@ -26,9 +26,10 @@ Before beginning you __must__ have a google account. You can create one [here](h
 1. Navigate to https://console.developers.google.com/apis/dashboard?
 2. Select the name of your Google Project
 3. Under __Library__ search for the **Youtube Analytics** & **Youtube Data V3** APIS and enable both.
-4. Next, navigate to __Credentials__ and find the auto created OAuth 2.0 client ID. It should be named __Web Client (auto created by Google Service)
+4. Next, navigate to __Credentials__ and find the auto created OAuth 2.0 client ID. 
+  + It should be named __Web Client (auto created by Google Service)__.
 5. Make a note of the __Client ID__ and __Client secret__. These will be used for setting up Oauth. 
-6. Add this authorized redirect URI under the section _Authorized redirect URIs_: https://oauth-redirect.googleusercontent.com/r/_{your app name}_ and save.
+6. Add this authorized redirect URI under the section _Authorized redirect URIs_: https://oauth-redirect.googleusercontent.com/r/ *{your app name}* and save.
 7. Navigate to https://console.actions.google.com and select your Google project > __Develop__ > __Account Linking__
 8. Select 'Yes, allow users to sign up for new accounts via voice'.
 9. Select __OAuth & Google Sign In__ as Linking Type with __Implicit__ Authentication.
@@ -59,6 +60,7 @@ https://www.googleapis.com/auth/yt-analytics.readonly
 4. Back in the Dialogflow Console > **Fulfillment** > **Enable** Webhook.
 5. Change the URL to _{url}_/dialogflow
  + For example: http://75e31e28.ngrok.io/dialogflow
+6. Save the changes. All traffic should be forwarded to localhost:5000.
 
 ### Deployment
 1. Navigate to the `functions` directory.
