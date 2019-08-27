@@ -3,7 +3,8 @@
 const { google } = require('googleapis');
 const { SignIn } = require('actions-on-google');
 
-module.exports.authenticatedUser = function (conv) {
+// Returns an authenticated google user or null if d.n.e
+module.exports.authenticateUser = function (conv) {
     const gAuth = new google.auth.OAuth2();   // Set up Google OAuth2 for authenticating as End Users
     let token = conv.user.access.token;
     // If token is attached to user
