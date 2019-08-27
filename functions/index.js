@@ -5,23 +5,21 @@
 
 const functions = require('firebase-functions');
 const { google } = require('googleapis');
-const {
-  dialogflow,
-  Suggestions } = require('actions-on-google');
-const auth = require('./utils/auth');
+const { dialogflow, Suggestions, SimpleResponse } = require('actions-on-google');
 
-
-const youtubeAnalytics = google.youtubeAnalytics('v2');   // Get Google's Youtube Analytics Api
+const auth = require('./utils/auth');   // Authentication for calling Google Apis
+const youtubeData = require('./api/data');   // Call the YouTube Data v3 Api
 
 process.env.DEBUG = 'dialogflow:debug'; // enables lib debugging statements
 
 const app = dialogflow({
+  // Replace with your client ID of your Actions Project
   clientId: '482054100077-mpve9p8ksof22m1nh97pktqao8li6sbj.apps.googleusercontent.com'
 });
 
-// ---------------------- Google Sign In Functions -------------------------------
+/* ---------------------- Google Sign In Functions ------------------------------- */
 app.intent('sign.in', auth.signIn);
-
+// Sign in confirmation
 app.intent('sign.in - event:confirmation', (conv, params, signin) => {
   if (signin.status === 'OK') {
     conv.ask("You're signed in. Let's get started!");
@@ -33,91 +31,36 @@ app.intent('sign.in - event:confirmation', (conv, params, signin) => {
   }
 });
 
-/*
-  User account statistic functions
-*/
-
-
-
-app.intent('analytics.video.views', (conv) => {
-  conv.ask('hello');
+/* ----------------- User account statistic functions ------------------------------- */
+// Get the statistics for a user's channel
+app.intent('channel.mine.statistics', async (conv, { statistic }) => {
+  let gAuth = auth.authenticateUser(conv);
+  if (gAuth) {
+    const statsObj = await youtubeData.getChannelStatistics(gAuth, true);   // Get statistic information
+    if (statsObj) {
+      // Object to convert statistic into something for the Assistant to say back
+      let plainTextStatistic = {
+        'commentCount': 'comment count',
+        'subscriberCount': 'subscriber count',
+        'videoCount': 'video count',
+        'viewCount': 'view count'
+      };
+      if(statistic) {
+        conv.ask(`Your ${plainTextStatistic[statistic]} is ${statsObj[statistic]}.`);
+      } else {
+        conv.ask(`You have ${statsObj['subscriberCount']} subscribers, ${statsObj['viewCount']} views, ${statsObj['videoCount']} videos and ${statsObj['commentCount']} comments.`);
+      }
+    } else {
+      conv.ask('I\'m having some trouble pulling your information. Try again later.');
+    }
+  } else {
+    // TODO add context for suggestions later
+    conv.followup('pulse_intent_SIGN_IN');  // Redirect to sign in
+  }
 });
-
 
 
 // Export the dialogflowFufillment for Firebase cloud function
 exports.dialogflowFirebaseFulfillment = functions.https.onRequest(app);
 // Export your dialogflow app for local debugging
 exports.googleAssistantAgent = app;
-
-
-//   // function testFunction(agent) {
-//   //   let conv = agent.conv();
-//   //   let token = conv.user.access.token;
-//   //   if(token) {
-//   //     console.log(token);
-//   //     gAuth.setCredentials({
-//   //       access_token: token
-//   //     });
-//   //     youtubeAnalytics.reports.query({
-//   //       auth: gAuth,
-//   //       dimensions: 'day',
-//   //       endDate: '2019-01-02',
-//   //       startDate: '2019-01-01',
-//   //       metrics: 'likes,dislikes,views',
-//   //       ids: 'channel==mine'
-//   //     }, (err, response) => {
-//   //       if(err) {
-//   //         console.log(err);
-//   //       } else {
-//   //         console.log(response);
-//   //       }
-//   //     }); 
-//   //     conv.ask('Has token');
-//   //     // runReport(token).then(output => {
-//   //     //   conv.ask('Sucess');
-//   //     //   agent.add(conv);
-//   //     // }).catch(error => {
-//   //     //   conv.ask('Failed to pull resource');
-//   //     //   agent.add(conv);
-//   //     // });
-//   //   } else {
-//   //     conv.ask('No token');
-//   //   }
-//   //   agent.add(conv);
-//   // }
-
-
-
-
-
-
-//   // Run the proper function handler based on the matched Dialogflow intent name
-//   let intentMap = new Map();
-//   if(agent.requestSource == agent.ACTIONS_ON_GOOGLE) {
-//     intentMap.set('analytics.video.views', testFunction);
-//     intentMap.set('sign.in', signIn);
-//     intentMap.set('sign.in.confirmation', confirmationSignIn);
-//   } else {
-//     intentMap.set('analytics.video.views', testFunction);
-//   }
-//   agent.handleRequest(intentMap);
-// });
-
-// // Uncomment and edit to make your own intent handler
-  // // uncomment `intentMap.set('your intent name here', yourFunctionHandler);`
-  // // below to get this function to be run when a Dialogflow intent is matched
-  // function yourFunctionHandler(agent) {
-  //   agent.add(`This message is from Dialogflow's Cloud Functions for Firebase inline editor!`);
-  //   agent.add(new Card({
-  //       title: `Title: this is a card title`,
-  //       imageUrl: 'https://dialogflow.com/images/api_home_laptop.svg',
-  //       text: `This is the body text of a card.  You can even use line\n  breaks and emoji! 💁`,
-  //       buttonText: 'This is a button',
-  //       buttonUrl: 'https://docs.dialogflow.com/'
-  //     })
-  //   );
-  //   agent.add(new Suggestion(`Quick Reply`));
-  //   agent.add(new Suggestion(`Suggestion`));
-  //   agent.setContext({ name: 'weather', lifespan: 2, parameters: { city: 'Rome' }});
-  // }
