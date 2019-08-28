@@ -7,19 +7,21 @@
 const { google } = require('googleapis');
 const ytData = google.youtube('v3');   // Get Google's Youtube Data Api 
 
-module.exports.getChannelStatistics = async function (gAuth, mine) {
+module.exports.getChannelDetails = async function (gAuth, part, mine) {
     console.log('Calling Youtube Data Api api.channel.list...');
     let response;
     try {
         response = await ytData.channels.list({
             auth: gAuth,
-            part: 'statistics',
+            part: part,
             mine: mine
         });
     } catch (err) {
-        console.log(`Failed to retreive channel statistics with error: ${err}`);
+        console.log(`Failed to retreive channel information with error: ${err}`);
         return null;
     }
-    console.log(`Successfully retreived channel stats: ${response.data["items"][0]["statistics"]}`);
-    return response.data["items"][0]["statistics"];
+    let data = response.data["items"][0][part];
+    data.id = response.data["items"][0]['id'];  // Include Channel Id
+    console.log(`Successfully retreived channel information: ${data}`);
+    return data;
 }
