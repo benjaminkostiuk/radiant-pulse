@@ -5,7 +5,13 @@
 
 const functions = require('firebase-functions');
 const { google } = require('googleapis');
-const { dialogflow, Suggestions, SimpleResponse, BasicCard, Button, Image, ImageDisplayOptions } = require('actions-on-google');
+const { dialogflow,
+  Suggestions,
+  BrowseCarousel,
+  BrowseCarouselItem,
+  BasicCard,
+  Button,
+  Image } = require('actions-on-google');
 
 const auth = require('./utils/auth');   // Authentication for calling Google Apis
 const dateformat = require('dateformat');
@@ -18,7 +24,7 @@ const app = dialogflow({
   clientId: '482054100077-mpve9p8ksof22m1nh97pktqao8li6sbj.apps.googleusercontent.com'
 });
 
-
+// Obtain information about the agent
 app.intent('agent.information', (conv) => {
   conv.ask('I can give you information about your YouTube channel and other channels, '
     + 'subscribe to channels, like videos and retrieve your YouTube analytics data all on your behalf.');
@@ -35,6 +41,9 @@ app.intent('sign.in - event:confirmation', (conv, params, signin) => {
     conv.ask("You're signed in. Let's get started!");
     if (conv.screen) {
       conv.ask(new Suggestions('What can you do?'));
+      conv.ask(new Suggestions('Show me my channel'));
+      conv.ask(new Suggestions('What are my stats?'));
+      conv.ask(new Suggestions('Show me my subscriptions'));
     }
   } else {
     conv.ask("I can\'t connect to your account, what do you want to do next?");
@@ -44,11 +53,13 @@ app.intent('sign.in - event:confirmation', (conv, params, signin) => {
 // Sign in prompt for users to connect their account
 app.intent('sign.in - event:prompt', (conv) => {
   conv.ask('In order to complete that request you\'ll need to connect to your YouTube account. Ask me to sign in to connect.');
-  conv.ask(new Suggestions('Sign in'));
-  conv.ask(new Suggestions('Connect to YouTube'));
+  if (conv.screen) {
+    conv.ask(new Suggestions('Sign in'));
+    conv.ask(new Suggestions('Connect to YouTube'));
+  }
 });
 
-/* ----------------- User account functions ------------------------------- */
+/* ----------------- YouTube Channel intents ------------------------------- */
 
 // Get the statistics for a user's channel
 app.intent('channel.mine.statistics', async (conv, { statistic }) => {
@@ -82,6 +93,7 @@ app.intent('channel.mine.overview', async (conv, { property }) => {
   if (gAuth) {
     const overviewObj = await youtubeData.getChannelDetails(gAuth, 'snippet', true);  // Get details
     if (overviewObj) {
+      // TODO add no screen text
       if (!conv.screen) {   // If no screen provided
         conv.ask('No screen :(');
         return;
@@ -89,15 +101,15 @@ app.intent('channel.mine.overview', async (conv, { property }) => {
       conv.ask('Here\'s an overview of your YouTube channel.');
       conv.ask(new BasicCard({
         title: `${overviewObj.title} - Youtube Channel`,
-        subtitle: `Published ${dateformat(overviewObj.publishedAt, 'ddd, mmmm dS, yyyy')}`,
+        subtitle: `Published ${dateformat(overviewObj.publishedAt, 'dddd, mmmm dS, yyyy')}`,
         text: overviewObj.description,
         buttons: new Button({
           title: 'Open in YouTube',
           url: `https://www.youtube.com/channel/${overviewObj.id}`,
         }),
         image: new Image({
-            url: overviewObj.thumbnails.high.url,
-            alt: 'Thumbnail',
+          url: overviewObj.thumbnails.high.url,
+          alt: 'Thumbnail',
         }),
         display: 'WHITE'
       }));
@@ -107,6 +119,70 @@ app.intent('channel.mine.overview', async (conv, { property }) => {
   } else {
     conv.followup('pulse_intent_SIGN_IN_PROMPT');  // Redirect to sign in prompt
   }
+});
+
+/* ------------------- YouTube Subscription intents ------------------------- */
+
+// Show a list of subscriptions for a channel
+app.intent('channel.mine.subscriptions.list', async (conv) => {
+  let gAuth = auth.authenticateUser(conv);
+  if (gAuth) {
+    const subscriptions = await youtubeData.getSubscriptions(gAuth, false, null); // Just get a sample to start
+
+    // TODO add no screen text
+    if (!conv.screen) {   // If no screen provided
+      conv.ask('No screen :(');
+      return;
+    }
+
+    if (subscriptions) {
+      conv.ask('Here are some of your subscriptions. ');
+      conv.ask(new BrowseCarousel({
+        items: subscriptions.map((value) => {
+          return new BrowseCarouselItem({
+            title: value.snippet.title,
+            url: `https://www.youtube.com/channel/${value.snippet.resourceId.channelId}`,
+            description: value.snippet.description,
+            image: new Image({
+              url: value.snippet.thumbnail,
+              alt: 'Thumbnail'
+            }),
+            footer: 'Tap to view'
+          });
+        })
+      }));
+      conv.ask('Would you like to view the entire list?');
+    } else {
+      conv.ask('I\'m having some trouble getting your subscriptions. Try again later.');
+    }
+  } else {
+    conv.followup('pulse_intent_SIGN_IN_PROMPT');  // Redirect to sign in prompt
+  }
+});
+
+// Followup: Yes to view the entire list
+app.intent('channel.mine.subscriptions.list - yes', (conv) => {
+  if (!conv.screen) {    // No screen
+    conv.ask('No view and manage your subscription list go to https://www.youtube.com/subscription_manager');
+    return;
+  }
+
+  conv.ask('Here\'s a link to view and manage your subscriptions.');
+  conv.ask(new BasicCard({
+    title: 'YouTube subscription manager',
+    subtitle: 'View and manage your subscriptions',
+    text: '',
+    buttons: new Button({
+      title: 'Open subscription manager',
+      url: 'https://www.youtube.com/subscription_manager'
+    }),
+  }));
+  // TODO add Suggestions
+});
+
+app.intent('channel.mine.subscriptions.list - no', (conv) => {
+  conv.ask('Ok, what can I help you with?');
+  //TODO add Suggestions
 });
 
 // Export the dialogflowFufillment for Firebase cloud function
