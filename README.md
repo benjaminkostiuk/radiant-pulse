@@ -1,6 +1,8 @@
 # Pulse for Google Assistant
 
-This repository contains the complete code for creating and developing the Pulse Google Assistant Agent created for Youtube. Included is the zipped JSON for easy agent import, the full cloud function code to be hosted by Firebase and tools for local development.
+This repository contains the complete code for creating and developing the Pulse Google Assistant Agent created for Youtube.
+
+Included is the zipped JSON for easy agent import, the full cloud function code to be hosted by Firebase and tools for local development.
 
 ## Setup
 Before beginning you __must__ have a google account. You can create one [here](https://accounts.google.com/signup/v2/webcreateaccount?flowName=GlifWebSignIn&flowEntry=SignUp).
